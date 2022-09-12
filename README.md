@@ -25,4 +25,10 @@ Try to increase your median pp scores, by practicing on songs which have a star 
 - [ ] star rating cross-matrix against pp
 - [ ] nice frontend to display interactive charts
 
+### Cancelled
+
+- History of scores against songs played: would it be nice to view my full progression and plot some interesting highlight points on those rating jumps
+  - ScoreSaber doesn't return the full history (possibly doesn't even store it) for a player (only last two months)
+  - We cannot get the frozen leaderboard as it was on a particular timestamp (to be able to reconstruct history)
+
 [1]: https://www.desmos.com/calculator/hhmszweref
