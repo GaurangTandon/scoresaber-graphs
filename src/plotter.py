@@ -1,3 +1,4 @@
+from argparse import ArgumentParser
 import json
 from time import time
 from matplotlib import pyplot as plt
@@ -25,9 +26,9 @@ def get_gradient(lowest, highest, value):
   return f"rgb({result[0]},{result[1]},{result[2]})"
 
 # scores are ordered from earliest to newest
-def get_data_from_scoresaber():
+def get_data_from_scoresaber(force_fetch: bool = False):
   now_time = time()
-  if RECENT_FILENAME.exists():
+  if not force_fetch and RECENT_FILENAME.exists():
     with open(str(RECENT_FILENAME)) as f:
       data = json.load(f)
       # not older than a day
@@ -55,8 +56,8 @@ def get_data_from_scoresaber():
     json.dump(final_data, f)
   return final_data
 
-def get_all_scores():
-  data = get_data_from_scoresaber()
+def get_all_scores(force_fetch: bool=False):
+  data = get_data_from_scoresaber(force_fetch)
   # certain songs have a zero maxScore, possibly they are unranked
   # so we filter them out
   scores = list(filter(lambda x: x['leaderboard']['maxScore'], data['scores']))
@@ -79,14 +80,14 @@ def get_accuracy(scores, filter_fn=lambda x: True):
   return list(map(lambda x: int(10000 * x['score']['modifiedScore'] / x['leaderboard']['maxScore']) / 100, filter(filter_fn, scores)))
 
 def get_names(scores, filter_fn=lambda x: True):
-  return list(map(lambda x: x['leaderboard']['songAuthorName'] + ' - ' + x['leaderboard']['songName'], filter(filter_fn, scores)))
+  return list(map(lambda x: x['leaderboard']['songName'] + ' - ' + x['leaderboard']['songAuthorName'], filter(filter_fn, scores)))
 
 def plot_pp(scores):
   plot_time_chart(get_raw_pp(scores), color='blue')
   plot_time_chart(get_weighted_pp(scores), color='green')
 
 def plot_stars_matrix(scores):
-  filter_fn = lambda x: 5 >= x['leaderboard']['stars'] >= 4
+  filter_fn = lambda x: x['leaderboard']['stars'] >= 4.5
   stars = get_stars(scores, filter_fn)
   accuracy = get_accuracy(scores, filter_fn)
   names = get_names(scores, filter_fn)
@@ -118,6 +119,10 @@ def plot_stars_matrix(scores):
   # plt.show()
 
 if __name__ == "__main__":
-  scores = get_all_scores()
+  parser = ArgumentParser("ScoreSaber scorer")
+  parser.add_argument('--force', action='store_true', help='Force refetch data from ScoreSaber')
+  args = parser.parse_args()
+
+  scores = get_all_scores(args.force)
   # plot_pp(scores)
   plot_stars_matrix(scores)
