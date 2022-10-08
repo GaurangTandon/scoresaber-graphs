@@ -3,6 +3,7 @@ import json
 from time import time
 from matplotlib import pyplot as plt
 from pathlib import Path
+import pandas as pd
 import requests
 
 from rich import print as rprint
@@ -87,7 +88,11 @@ def plot_pp(scores):
   plot_time_chart(get_weighted_pp(scores), color='green')
 
 def plot_stars_matrix(scores):
-  filter_fn = lambda x: x['leaderboard']['stars'] >= 4.5
+  # any song less than 5 star is not helping me get 200pp
+  # highest I have so far on a 4star song is 180pp on a 93% play
+  # so now I should switch to >= 5 star songs
+  # filter out low star songs
+  filter_fn = lambda x: x['leaderboard']['stars'] >= 5
   stars = get_stars(scores, filter_fn)
   accuracy = get_accuracy(scores, filter_fn)
   names = get_names(scores, filter_fn)
@@ -97,7 +102,7 @@ def plot_stars_matrix(scores):
   highest_acc = max(accuracy)
   lowest_acc = min(accuracy)
 
-  # zip and filter out low star songs
+  # zip data
   data = list(zip(stars, accuracy, names, raw_pp))
 
   # sort list by star rating
@@ -112,6 +117,10 @@ def plot_stars_matrix(scores):
     return f"{x[0]}, {formatted_accuracy}, {x[3]}, {x[2]}"
 
   rprint('\n'.join(map(get_print_string, data)))
+
+  accSeries = pd.Series(accuracy, name="Accuracies")
+  print(accSeries.describe())
+  
   # unzip and plot
 
   # stars, accuracy, names, raw_pp = zip(*data)
