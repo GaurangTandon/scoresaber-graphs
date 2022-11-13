@@ -10,10 +10,8 @@ from rich import print as rprint
 
 PLAYER_ID = "76561199212289731"
 LIMIT_MAX = 100
-REQUEST_URL = f"https://scoresaber.com/api/player/{PLAYER_ID}/scores?limit={LIMIT_MAX}&sort=recent&withMetadata=false"
 
 CACHE_PATH = Path('cache')
-RECENT_FILENAME = CACHE_PATH / 'latest.json'
 
 BEST_COLOR = (0, 255, 0)
 WORST_COLOR = (255, 0, 0)
@@ -28,6 +26,7 @@ def get_gradient(lowest, highest, value):
 
 # scores are ordered from earliest to newest
 def get_data_from_scoresaber(force_fetch: bool = False):
+  RECENT_FILENAME = CACHE_PATH / f'latest_{PLAYER_ID}.json'
   now_time = time()
   if not force_fetch and RECENT_FILENAME.exists():
     with open(str(RECENT_FILENAME)) as f:
@@ -38,6 +37,7 @@ def get_data_from_scoresaber(force_fetch: bool = False):
 
   scores = []
   page = 1
+  REQUEST_URL = f"https://scoresaber.com/api/player/{PLAYER_ID}/scores?limit={LIMIT_MAX}&sort=recent&withMetadata=false"
   while True:
     url = REQUEST_URL + f"&page={page}"
     print('Requesting', url)
@@ -48,7 +48,11 @@ def get_data_from_scoresaber(force_fetch: bool = False):
       break
     
     data_got = res.json()
-    scores.extend(data_got["playerScores"])
+    scores_curr = data_got["playerScores"]
+    if len(scores_curr) == 0:
+        print("Exited at empty list")
+        break
+    scores.extend(scores_curr)
     page += 1
   
   scores.reverse()
@@ -130,7 +134,11 @@ def plot_stars_matrix(scores):
 if __name__ == "__main__":
   parser = ArgumentParser("ScoreSaber scorer")
   parser.add_argument('--force', action='store_true', help='Force refetch data from ScoreSaber')
+  parser.add_argument('--player', action='store', help='Fetch based on username')
   args = parser.parse_args()
+  if args.player is not None:
+    if args.player == 'AK':
+      PLAYER_ID = '76561197988817968'
 
   scores = get_all_scores(args.force)
   # plot_pp(scores)
