@@ -8,7 +8,6 @@ import requests
 
 from rich import print as rprint
 
-PLAYER_ID = "76561199212289731"
 LIMIT_MAX = 100
 
 CACHE_PATH = Path('cache')
@@ -25,8 +24,8 @@ def get_gradient(lowest, highest, value):
   return f"rgb({result[0]},{result[1]},{result[2]})"
 
 # scores are ordered from earliest to newest
-def get_data_from_scoresaber(force_fetch: bool = False):
-  RECENT_FILENAME = CACHE_PATH / f'latest_{PLAYER_ID}.json'
+def get_data_from_scoresaber(player_id: str, force_fetch: bool = False):
+  RECENT_FILENAME = CACHE_PATH / f'latest_{player_id}.json'
   now_time = time()
   if not force_fetch and RECENT_FILENAME.exists():
     with open(str(RECENT_FILENAME)) as f:
@@ -37,7 +36,7 @@ def get_data_from_scoresaber(force_fetch: bool = False):
 
   scores = []
   page = 1
-  REQUEST_URL = f"https://scoresaber.com/api/player/{PLAYER_ID}/scores?limit={LIMIT_MAX}&sort=recent&withMetadata=false"
+  REQUEST_URL = f"https://scoresaber.com/api/player/{player_id}/scores?limit={LIMIT_MAX}&sort=recent&withMetadata=false"
   while True:
     url = REQUEST_URL + f"&page={page}"
     print('Requesting', url)
@@ -61,8 +60,8 @@ def get_data_from_scoresaber(force_fetch: bool = False):
     json.dump(final_data, f)
   return final_data
 
-def get_all_scores(force_fetch: bool=False):
-  data = get_data_from_scoresaber(force_fetch)
+def get_all_scores(player_id: str, force_fetch: bool=False):
+  data = get_data_from_scoresaber(player_id, force_fetch)
   # certain songs have a zero maxScore, possibly they are unranked
   # so we filter them out
   scores = list(filter(lambda x: x['leaderboard']['maxScore'], data['scores']))
@@ -134,12 +133,23 @@ def plot_stars_matrix(scores):
 if __name__ == "__main__":
   parser = ArgumentParser("ScoreSaber scorer")
   parser.add_argument('--force', action='store_true', help='Force refetch data from ScoreSaber')
+  parser.add_argument('--compare', action='store_true', help='Compare myself against given player')
   parser.add_argument('--player', action='store', help='Fetch based on username')
   args = parser.parse_args()
-  if args.player is not None:
-    if args.player == 'AK':
-      PLAYER_ID = '76561197988817968'
 
-  scores = get_all_scores(args.force)
+  # codergamer
+  player_id = "76561199212289731"
+  other_player_id = None
+
+  if args.player is not None:
+    mapping = {
+      'AK': '76561197988817968'
+    }
+    if args.compare:
+      other_player_id = mapping[args.player]
+    else:
+      player_id = mapping[args.player]
+
+  scores = get_all_scores(player_id, args.force)
   # plot_pp(scores)
   plot_stars_matrix(scores)
