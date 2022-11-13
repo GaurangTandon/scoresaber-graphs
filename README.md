@@ -24,6 +24,7 @@ Try to increase your median pp scores, by practicing on songs which have a star 
 - [ ] raw/weighted pp histogram
 - [ ] star rating cross-matrix against pp
 - [ ] nice frontend to display interactive charts
+- [ ] comparison against other players across common songs
 
 ### Cancelled
 
