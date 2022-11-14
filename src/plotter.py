@@ -92,7 +92,11 @@ def get_accuracy(scores):
   return list(map(get_acc_one_score, scores))
 
 def get_name_one_score(score_obj):
-  return score_obj['leaderboard']['songName'] + ' - ' + score_obj['leaderboard']['songAuthorName']
+  full_name = score_obj['leaderboard']['songName'] + ' - ' + score_obj['leaderboard']['songAuthorName']
+  name = full_name
+  if len(full_name) > 50:
+    name = full_name[:50] + '...'
+  return name
 
 def get_names(scores):
   return list(map(get_name_one_score, scores))
@@ -149,14 +153,21 @@ def plot_comparison(scores, scores_player, name_player):
     if comparable:
       data = (get_acc_one_score(score), get_acc_one_score(comparable), get_star_one_score(score), get_name_one_score(score))
       diff_list.append(data)
-  diff_list.sort(key=lambda x,y:x[0]-x[1]<y[0]-y[1])
+  diff_list.sort(key=lambda x:x[2])
   table = Table(title="Score comparison")
   table.add_column('My score')
   table.add_column('Their score')
   table.add_column('Difficulty')
   table.add_column('Song name')
-  for row in diff_list:
-    table.add_row(*row)
+
+  score_diff_list = list(map(lambda x: x[0] - x[1], diff_list))
+  highest_diff = max(score_diff_list)
+  lowest_diff = min(score_diff_list)
+
+  for (s1, s2, star, name) in diff_list:
+    color_acc = get_gradient(lowest_diff, highest_diff, s1 - s2)
+    formatted_s1 = f"[{color_acc}]{s1}[/]"
+    table.add_row(formatted_s1, str(s2), str(star), name)
 
   console = Console()
   console.print(table)
